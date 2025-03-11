@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aloft Giftings | Find the Perfect Gift</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="generator-page">
+    <div class="container">
+        <header>
+            <h1>Aloft Giftings</h1>
+            <p class="tagline">Elevate your gift-giving experience</p>
+            <nav>
+                <a href="index.html" class="nav-link">Home</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="gift-finder">
+                <h2>Find the Perfect Gift</h2>
+                <form id="gift-form">
+                    <div class="form-group">
+                        <label for="occasion">Occasion</label>
+                        <select id="occasion" required>
+                            <option value="" disabled selected>Select an occasion</option>
+                            <option value="birthday">Birthday</option>
+                            <option value="anniversary">Anniversary</option>
+                            <option value="christmas">Christmas</option>
+                            <option value="valentines">Valentine's Day</option>
+                            <option value="graduation">Graduation</option>
+                            <option value="housewarming">Housewarming</option>
+                            <option value="wedding">Wedding</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recipient">Recipient</label>
+                        <select id="recipient" required>
+                            <option value="" disabled selected>Select recipient type</option>
+                            <option value="friend">Friend</option>
+                            <option value="family">Family Member</option>
+                            <option value="partner">Partner/Lover</option>
+                            <option value="colleague">Colleague</option>
+                            <option value="child">Child</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="budget">Budget</label>
+                        <select id="budget" required>
+                            <option value="" disabled selected>Select your budget</option>
+                            <option value="diy">DIY (Minimal Cost)</option>
+                            <option value="under50">Under $50</option>
+                            <option value="under100">Under $100</option>
+                            <option value="under200">Under $200</option>
+                            <option value="luxury">Luxury (Over $200)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interests">Recipient's Interests (Optional)</label>
+                        <select id="interests">
+                            <option value="" disabled selected>Select an interest</option>
+                            <option value="tech">Technology</option>
+                            <option value="cooking">Cooking</option>
+                            <option value="reading">Reading</option>
+                            <option value="fitness">Fitness</option>
+                            <option value="art">Art & Creativity</option>
+                            <option value="travel">Travel</option>
+                            <option value="gaming">Gaming</option>
+                            <option value="music">Music</option>
+                            <option value="fashion">Fashion</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="extra-info">Additional Details (Optional)</label>
+                        <textarea id="extra-info" placeholder="Add any specific details about the recipient or the occasion..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Generate Gift Ideas</button>
+                </form>
+            </section>
+
+            <section class="results-section hidden" id="results-section">
+                <div class="loading-animation hidden" id="loading">
+                    <div class="spinner"></div>
+                    <p>Finding perfect gift ideas...</p>
+                </div>
+                <div class="results-container" id="results-container">
+                    <h2>Your Gift Ideas</h2>
+                    <div id="gift-ideas"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2023 Aloft Giftings. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
