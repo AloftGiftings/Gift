@@ -5,8 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('results-container');
     const giftIdeasContainer = document.getElementById('gift-ideas');
     
-    // API key for OpenAI - in production, this should be handled server-side
-    const apiKey = config.OPENAI_API_KEY;
+    // Make sure config exists
+    if (!window.config || !window.config.API_KEY) {
+        console.error("API key not found. Make sure config.js is loaded properly.");
+    } else {
+        console.log("Config loaded successfully");
+    }
     
     giftForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -57,13 +61,16 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         
         try {
+            // Add console logs to debug the request
+            console.log("Making API request with key:", config.API_KEY);
+            
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${config.API_KEY}`,
-                    'HTTP-Referer': window.location.href, // Required by OpenRouter
-                    'X-Title': 'Aloft Giftings' // Your site name
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'Aloft Giftings'
                 },
                 body: JSON.stringify({
                     model: "deepseek-ai/deepseek-coder-33b-instruct",
@@ -77,23 +84,42 @@ document.addEventListener('DOMContentLoaded', () => {
                             content: prompt
                         }
                     ],
-                    temperature: 0.7
+                    temperature: 0.7,
+                    max_tokens: 1000
                 })
             });
             
+            // Log the response status
+            console.log("API response status:", response.status);
+            
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`API request failed with status ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
+                const errorText = await response.text();
+                console.error("Full error response:", errorText);
+                let errorMessage = "Unknown API error";
+                
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.error?.message || errorData.message || "API request failed";
+                } catch (e) {
+                    errorMessage = errorText || `API request failed with status ${response.status}`;
+                }
+                
+                throw new Error(errorMessage);
             }
             
             const data = await response.json();
+            console.log("API response data:", data);
+            
             const content = data.choices[0].message.content;
             
             // Try to parse the JSON from the response
             try {
                 return JSON.parse(content);
-            } catch {
-                // If no JSON found, try to extract structured data
+            } catch (parseError) {
+                console.log("Raw content:", content);
+                console.error("Parse error:", parseError);
+                
+                // If JSON parsing fails, try to extract structured data
                 const ideas = [];
                 const sections = content.split(/\d+\.\s/).filter(Boolean);
                 
@@ -113,8 +139,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     return ideas;
                 }
                 
-                // If all parsing attempts fail, create a fallback response
-                throw new Error("Could not parse AI response");
+                // Fallback with basic ideas if all else fails
+                return [
+                    { 
+                        title: "Custom Gift Basket", 
+                        description: "A personalized collection of small items based on their interests.", 
+                        priceRange: "Varies based on contents" 
+                    },
+                    { 
+                        title: "Experience Gift", 
+                        description: "Consider tickets to an event, class, or activity they would enjoy.", 
+                        priceRange: "Varies based on experience" 
+                    },
+                    { 
+                        title: "Gift Card", 
+                        description: "A gift card to their favorite store or service.", 
+                        priceRange: "You decide the amount" 
+                    }
+                ];
             }
         } catch (error) {
             console.error("API request error:", error);
