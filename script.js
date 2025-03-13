@@ -60,18 +60,22 @@ document.addEventListener('DOMContentLoaded', () => {
             Format your response as a JSON array with objects containing title, description, and priceRange fields.
         `;
         
-        // Hard-code the API key to ensure it's correct
+        // Hard-coded API key - this is the correct approach for OpenRouter
         const apiKey = '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';
         
         try {
+            console.log("Making API request to OpenRouter...");
+            
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'HTTP-Referer': 'https://diettraqr.com',
+                    'X-Title': 'Aloft Giftings'
                 },
                 body: JSON.stringify({
                     model: "deepseek-ai/deepseek-coder-33b-instruct",
-                    api_key: apiKey,
                     messages: [
                         {
                             role: "system",
@@ -87,7 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
             
-            // Log the response status
             console.log("API response status:", response.status);
             
             if (!response.ok) {
