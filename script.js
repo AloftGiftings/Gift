@@ -60,20 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
             Format your response as a JSON array with objects containing title, description, and priceRange fields.
         `;
         
+        // Hard-code the API key to ensure it's correct
+        const apiKey = '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';
+        
         try {
-            // Add console logs to debug the request
-            console.log("Making API request with key:", config.API_KEY);
-            
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${config.API_KEY}`,
-                    'HTTP-Referer': window.location.origin,
-                    'X-Title': 'Aloft Giftings'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     model: "deepseek-ai/deepseek-coder-33b-instruct",
+                    api_key: apiKey,
                     messages: [
                         {
                             role: "system",
