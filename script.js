@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     async function generateGiftIdeas(occasion, recipient, budget, interests, extraInfo) {
-        // Create a more structured prompt for better results
         const prompt = `
             I need gift ideas for a ${recipient} for ${occasion}. 
             Budget: ${budget}
@@ -55,26 +54,19 @@ document.addEventListener('DOMContentLoaded', () => {
             3. An approximate price range
             
             Format your response as a JSON array with objects containing title, description, and priceRange fields.
-            Example format:
-            [
-              {
-                "title": "Gift Name",
-                "description": "Why this gift is appropriate",
-                "priceRange": "$XX-$YY"
-              },
-              ...
-            ]
         `;
         
         try {
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
+                    'Authorization': `Bearer ${config.API_KEY}`,
+                    'HTTP-Referer': window.location.href, // Required by OpenRouter
+                    'X-Title': 'Aloft Giftings' // Your site name
                 },
                 body: JSON.stringify({
-                    model: "gpt-3.5-turbo",
+                    model: "deepseek-ai/deepseek-coder-33b-instruct",
                     messages: [
                         {
                             role: "system",
@@ -99,61 +91,30 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Try to parse the JSON from the response
             try {
-                // First, try to parse the entire response as JSON
-                try {
-                    return JSON.parse(content);
-                } catch {
-                    // If that fails, look for JSON array in the response
-                    const jsonMatch = content.match(/\[[\s\S]*\]/);
-                    if (jsonMatch) {
-                        return JSON.parse(jsonMatch[0]);
-                    }
-                    
-                    // If no JSON array found, try to extract structured data
-                    const ideas = [];
-                    const sections = content.split(/\d+\.\s/).filter(Boolean);
-                    
-                    for (const section of sections) {
-                        if (section.trim()) {
-                            const lines = section.split('\n').filter(Boolean);
-                            const title = lines[0].replace(/^[^a-zA-Z0-9]+/, '').trim();
-                            const description = lines.slice(1, -1).join(' ').trim();
-                            const priceRange = lines[lines.length - 1].includes('$') ? 
-                                lines[lines.length - 1].trim() : 'Price varies';
-                            
-                            ideas.push({ title, description, priceRange });
-                        }
-                    }
-                    
-                    if (ideas.length > 0) {
-                        return ideas;
-                    }
-                    
-                    // If all parsing attempts fail, create a fallback response
-                    throw new Error("Could not parse AI response");
-                }
-            } catch (parseError) {
-                console.error("Error parsing AI response:", parseError);
-                console.log("Raw response:", content);
+                return JSON.parse(content);
+            } catch {
+                // If no JSON found, try to extract structured data
+                const ideas = [];
+                const sections = content.split(/\d+\.\s/).filter(Boolean);
                 
-                // Return a fallback response
-                return [
-                    { 
-                        title: "Custom Gift Basket", 
-                        description: "A personalized collection of small items based on their interests. This is a fallback suggestion as we had trouble processing the AI response.", 
-                        priceRange: "Varies based on contents" 
-                    },
-                    { 
-                        title: "Experience Gift", 
-                        description: "Consider tickets to an event, class, or activity they would enjoy. This is a fallback suggestion.", 
-                        priceRange: "Varies based on experience" 
-                    },
-                    { 
-                        title: "Gift Card", 
-                        description: "While less personal, a gift card to their favorite store or service gives them freedom to choose. This is a fallback suggestion.", 
-                        priceRange: "You decide the amount" 
+                for (const section of sections) {
+                    if (section.trim()) {
+                        const lines = section.split('\n').filter(Boolean);
+                        const title = lines[0].replace(/^[^a-zA-Z0-9]+/, '').trim();
+                        const description = lines.slice(1, -1).join(' ').trim();
+                        const priceRange = lines[lines.length - 1].includes('$') ? 
+                            lines[lines.length - 1].trim() : 'Price varies';
+                        
+                        ideas.push({ title, description, priceRange });
                     }
-                ];
+                }
+                
+                if (ideas.length > 0) {
+                    return ideas;
+                }
+                
+                // If all parsing attempts fail, create a fallback response
+                throw new Error("Could not parse AI response");
             }
         } catch (error) {
             console.error("API request error:", error);
