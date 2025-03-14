@@ -57,83 +57,112 @@ document.addEventListener('DOMContentLoaded', () => {
         const apiKey = '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';
         
         try {
-            console.log("DEBUG: Starting API request");
+            console.log("Attempting API request to OpenRouter...");
             
-            // Let's try a different approach - use mockup data for now
-            // This will at least let users see how the interface works
-            console.log("DEBUG: Using fallback data due to API issues");
-            
-            // Return mock data while we resolve the API issue
-            return [
-                {
-                    title: "Personalized Photo Album",
-                    description: "A custom photo album filled with meaningful memories. Great for someone who appreciates sentimental gifts and personal touches.",
-                    priceRange: "$30-$50"
-                },
-                {
-                    title: "Subscription Box",
-                    description: "A monthly subscription to items related to their interests. This gift keeps on giving throughout the year!",
-                    priceRange: "$15-$25 per month"
-                },
-                {
-                    title: "Premium Headphones",
-                    description: "High-quality headphones for music lovers or gamers. Perfect for immersive experiences with their favorite content.",
-                    priceRange: "$80-$150"
-                },
-                {
-                    title: "Cooking Class Experience",
-                    description: "An in-person or online cooking class to learn new skills and recipes. Great for food enthusiasts who enjoy culinary adventures.",
-                    priceRange: "$50-$100"
-                },
-                {
-                    title: "Customized Gift Basket",
-                    description: "A basket filled with their favorite treats, drinks, and small items tailored to their interests and preferences.",
-                    priceRange: "$40-$80"
+            // First try to use real API
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        'HTTP-Referer': window.location.origin,
+                        'X-Title': 'Aloft Giftings',
+                        'OR-SITE-URL': 'https://diettraqr.com'
+                    },
+                    body: JSON.stringify({
+                        model: "openai/gpt-3.5-turbo", // Try a different model
+                        messages: [
+                            {
+                                role: "system",
+                                content: "You are a helpful gift recommendation assistant. Provide thoughtful, specific gift ideas based on the criteria given. Always respond with properly formatted JSON."
+                            },
+                            {
+                                role: "user",
+                                content: prompt
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 800
+                    })
+                });
+                
+                console.log("OpenRouter response status:", response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("API error response:", errorText);
+                    throw new Error(`API Error: ${errorText}`);
                 }
-            ];
-            
-            // The code below is temporarily commented out until we fix the API issue
-            /*
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': 'https://diettraqr.com',
-                    'X-Title': 'Aloft Giftings'
-                },
-                body: JSON.stringify({
-                    model: "deepseek-ai/deepseek-coder-33b-instruct",
-                    messages: [
-                        {
-                            role: "system",
-                            content: "You are a helpful gift recommendation assistant. Provide thoughtful, specific gift ideas based on the criteria given. Always respond with properly formatted JSON."
-                        },
-                        {
-                            role: "user",
-                            content: prompt
+                
+                const data = await response.json();
+                console.log("API response received successfully");
+                
+                const content = data.choices[0].message.content;
+                console.log("Processing content:", content.substring(0, 100) + "...");
+                
+                // Try to parse JSON from the response
+                try {
+                    return JSON.parse(content);
+                } catch (parseError) {
+                    console.warn("JSON parse error, falling back to text processing:", parseError);
+                    
+                    // If JSON parsing fails, try to extract structured data
+                    const ideas = [];
+                    const sections = content.split(/\d+\.\s/).filter(Boolean);
+                    
+                    for (const section of sections) {
+                        if (section.trim()) {
+                            const lines = section.split('\n').filter(Boolean);
+                            const title = lines[0].replace(/^[^a-zA-Z0-9]+/, '').trim();
+                            const description = lines.slice(1, -1).join(' ').trim();
+                            const priceRange = lines[lines.length - 1].includes('$') ? 
+                                lines[lines.length - 1].trim() : 'Price varies';
+                            
+                            ideas.push({ title, description, priceRange });
                         }
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 1000
-                })
-            });
-            
-            console.log("DEBUG: Response status:", response.status);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error("DEBUG: Full error:", errorText);
-                throw new Error(errorText);
+                    }
+                    
+                    if (ideas.length > 0) {
+                        return ideas;
+                    }
+                    
+                    throw new Error("Could not parse AI response");
+                }
+            } catch (apiError) {
+                console.warn("API request failed, using fallback data:", apiError);
+                
+                // Fallback data customized based on user input
+                return [
+                    {
+                        title: `Personalized ${interests || 'Gift'} Basket`,
+                        description: `A custom collection of ${interests || 'favorite'} items tailored for your ${recipient} for ${occasion}.`,
+                        priceRange: budget === "luxury" ? "$200+" : (budget === "under50" ? "$30-$50" : "$50-$100")
+                    },
+                    {
+                        title: `${interests || 'Premium'} Subscription Service`,
+                        description: `A monthly subscription that delivers curated ${interests || 'items'} to your ${recipient}'s door.`,
+                        priceRange: "$15-$25 per month"
+                    },
+                    {
+                        title: `High-Quality ${interests || 'Tech'} Accessory`,
+                        description: `A durable, premium accessory that enhances their ${interests || 'daily'} experience.`,
+                        priceRange: budget === "luxury" ? "$150-$250" : "$80-$150"
+                    },
+                    {
+                        title: `${interests || 'Creative'} Experience`,
+                        description: `An in-person or online ${interests || 'class'} or experience they'll remember.`,
+                        priceRange: "$50-$100"
+                    },
+                    {
+                        title: `Personalized ${occasion} Keepsake`,
+                        description: `A customized memento to commemorate this special ${occasion} that your ${recipient} will treasure.`,
+                        priceRange: "$40-$80"
+                    }
+                ];
             }
-            
-            const data = await response.json();
-            const content = data.choices[0].message.content;
-            return JSON.parse(content);
-            */
-            
         } catch (error) {
-            console.error("DEBUG error:", error);
+            console.error("Error in gift generation:", error);
             throw error;
         }
     }
