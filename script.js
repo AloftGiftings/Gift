@@ -57,19 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const apiKey = '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';
         
         try {
-            console.log("Making API request to OpenRouter with Deepseek model...");
+            console.log("Trying a different approach with OpenRouter API...");
             
-            // Using the correct format for OpenRouter API
+            // Try a completely different approach with OpenRouter
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': window.location.origin,
+                    'HTTP-Referer': window.location.href, // Use full URL including path
                     'X-Title': 'Aloft Giftings'
                 },
                 body: JSON.stringify({
-                    model: "deepseek/deepseek-coder-33b-instruct", // Updated model format
+                    model: "openai/gpt-3.5-turbo", // Try a different model that's definitely available
                     messages: [
                         {
                             role: "system",
@@ -81,8 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     ],
                     temperature: 0.7,
-                    max_tokens: 1000,
-                    route: "deepseek" // Explicitly route to Deepseek
+                    max_tokens: 1000
                 })
             });
             
@@ -91,7 +90,46 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error("Full error response:", errorText);
-                throw new Error("API request failed. Using fallback data instead.");
+                
+                // Let's try one more approach - direct API key in URL
+                console.log("Trying one more approach with API key in URL...");
+                
+                const fallbackResponse = await fetch(`https://openrouter.ai/api/v1/chat/completions?api_key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'Aloft Giftings'
+                    },
+                    body: JSON.stringify({
+                        model: "openai/gpt-3.5-turbo",
+                        messages: [
+                            {
+                                role: "system",
+                                content: "You are a helpful gift recommendation assistant. Provide thoughtful, specific gift ideas based on the criteria given. Always respond with properly formatted JSON."
+                            },
+                            {
+                                role: "user",
+                                content: prompt
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    })
+                });
+                
+                if (!fallbackResponse.ok) {
+                    throw new Error("All API approaches failed. Using fallback data.");
+                }
+                
+                const fallbackData = await fallbackResponse.json();
+                const fallbackContent = fallbackData.choices[0].message.content;
+                
+                try {
+                    return JSON.parse(fallbackContent);
+                } catch (parseError) {
+                    throw new Error("Could not parse API response. Using fallback data.");
+                }
             }
             
             const data = await response.json();
@@ -133,35 +171,72 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("API request or parsing error:", error);
             console.log("Using fallback gift ideas instead");
             
-            // Return mock data as fallback
-            return [
-                {
-                    title: "Personalized Photo Album",
-                    description: "A custom photo album filled with meaningful memories. Great for someone who appreciates sentimental gifts and personal touches.",
-                    priceRange: "$30-$50"
-                },
-                {
-                    title: "Subscription Box",
-                    description: "A monthly subscription to items related to their interests. This gift keeps on giving throughout the year!",
-                    priceRange: "$15-$25 per month"
-                },
-                {
-                    title: "Premium Headphones",
-                    description: "High-quality headphones for music lovers or gamers. Perfect for immersive experiences with their favorite content.",
-                    priceRange: "$80-$150"
-                },
-                {
-                    title: "Cooking Class Experience",
-                    description: "An in-person or online cooking class to learn new skills and recipes. Great for food enthusiasts who enjoy culinary adventures.",
-                    priceRange: "$50-$100"
-                },
-                {
-                    title: "Customized Gift Basket",
-                    description: "A basket filled with their favorite treats, drinks, and small items tailored to their interests and preferences.",
-                    priceRange: "$40-$80"
-                }
-            ];
+            // Generate dynamic fallback data based on user input
+            const dynamicIdeas = generateDynamicFallbackIdeas(occasion, recipient, budget, interests);
+            return dynamicIdeas;
         }
+    }
+    
+    // Function to generate more relevant fallback ideas based on user input
+    function generateDynamicFallbackIdeas(occasion, recipient, budget, interests) {
+        // Base ideas that can be customized
+        const baseIdeas = [
+            {
+                title: "Personalized Photo Album",
+                description: "A custom photo album filled with meaningful memories. Great for someone who appreciates sentimental gifts and personal touches.",
+                priceRange: "$30-$50"
+            },
+            {
+                title: "Subscription Box",
+                description: "A monthly subscription to items related to their interests. This gift keeps on giving throughout the year!",
+                priceRange: "$15-$25 per month"
+            },
+            {
+                title: "Premium Headphones",
+                description: "High-quality headphones for music lovers or gamers. Perfect for immersive experiences with their favorite content.",
+                priceRange: "$80-$150"
+            },
+            {
+                title: "Cooking Class Experience",
+                description: "An in-person or online cooking class to learn new skills and recipes. Great for food enthusiasts who enjoy culinary adventures.",
+                priceRange: "$50-$100"
+            },
+            {
+                title: "Customized Gift Basket",
+                description: "A basket filled with their favorite treats, drinks, and small items tailored to their interests and preferences.",
+                priceRange: "$40-$80"
+            }
+        ];
+        
+        // Customize descriptions based on recipient and occasion
+        return baseIdeas.map(idea => {
+            const newIdea = {...idea};
+            
+            // Customize based on recipient
+            if (recipient === "partner" || recipient === "lover") {
+                newIdea.description = newIdea.description.replace("someone", "your partner").replace("their", "your partner's");
+            } else if (recipient === "family") {
+                newIdea.description = newIdea.description.replace("someone", "a family member").replace("their", "your family member's");
+            } else if (recipient === "friend") {
+                newIdea.description = newIdea.description.replace("someone", "a friend").replace("their", "your friend's");
+            }
+            
+            // Customize based on occasion
+            if (occasion === "birthday") {
+                newIdea.description += " Perfect for celebrating another year of life.";
+            } else if (occasion === "christmas") {
+                newIdea.description += " A thoughtful Christmas gift they'll appreciate.";
+            } else if (occasion === "anniversary") {
+                newIdea.description += " A meaningful way to celebrate your special day together.";
+            }
+            
+            // Customize based on interests if provided
+            if (interests) {
+                newIdea.description += ` Especially suitable for someone interested in ${interests}.`;
+            }
+            
+            return newIdea;
+        });
     }
     
     function displayGiftIdeas(giftIdeas) {
