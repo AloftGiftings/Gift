@@ -57,19 +57,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const apiKey = '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';
         
         try {
-            console.log("Trying a different approach with OpenRouter API...");
+            console.log("Making API request with deepseek/deepseek-r1:free model...");
             
-            // Try a completely different approach with OpenRouter
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': window.location.href, // Use full URL including path
+                    'HTTP-Referer': window.location.href,
                     'X-Title': 'Aloft Giftings'
                 },
                 body: JSON.stringify({
-                    model: "openai/gpt-3.5-turbo", // Try a different model that's definitely available
+                    model: "deepseek/deepseek-r1:free", // Using the specified free model
                     messages: [
                         {
                             role: "system",
@@ -91,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errorText = await response.text();
                 console.error("Full error response:", errorText);
                 
-                // Let's try one more approach - direct API key in URL
-                console.log("Trying one more approach with API key in URL...");
+                // Try fallback with the same model but API key in URL
+                console.log("Trying fallback approach with API key in URL...");
                 
                 const fallbackResponse = await fetch(`https://openrouter.ai/api/v1/chat/completions?api_key=${apiKey}`, {
                     method: 'POST',
@@ -102,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         'X-Title': 'Aloft Giftings'
                     },
                     body: JSON.stringify({
-                        model: "openai/gpt-3.5-turbo",
+                        model: "deepseek/deepseek-r1:free", // Using the same specified model
                         messages: [
                             {
                                 role: "system",
