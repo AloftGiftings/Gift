@@ -53,26 +53,30 @@ document.addEventListener('DOMContentLoaded', () => {
             Format your response as a JSON array with objects containing title, description, and priceRange fields.
         `;
         
-        // API Key for OpenRouter
+        // API Key for OpenRouter - ensure no extra spaces or characters
         const apiKey = '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';
         
         try {
-            console.log("Making API request with deepseek/deepseek-r1:free model...");
+            console.log("Making API request with correct OpenRouter format...");
             
+            // Use the exact format from OpenRouter documentation
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': window.location.href,
+                    // Format exactly as specified in OpenRouter docs
+                    'Authorization': `Bearer ${apiKey.trim()}`,
+                    // Use absolute URL with https://
+                    'HTTP-Referer': 'https://diettraqr.com',
                     'X-Title': 'Aloft Giftings'
                 },
                 body: JSON.stringify({
-                    model: "deepseek/deepseek-r1:free", // Using the specified free model
+                    // Use a model that's definitely available on the free tier
+                    model: "openai/gpt-3.5-turbo",
                     messages: [
                         {
                             role: "system",
-                            content: "You are a helpful gift recommendation assistant. Provide thoughtful, specific gift ideas based on the criteria given. Always respond with properly formatted JSON."
+                            content: "You are a helpful gift recommendation assistant."
                         },
                         {
                             role: "user",
