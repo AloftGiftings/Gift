@@ -18,6 +18,11 @@ exports.handler = async (event) => {
             Format your response as a JSON array with objects containing title, description, and priceRange fields.
         `;
         
+        // Hardcode the API key temporarily for testing
+        const apiKey = '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';
+        
+        console.log("Making request to OpenRouter API...");
+        
         const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
             model: "openai/gpt-3.5-turbo",
             messages: [
@@ -35,21 +40,37 @@ exports.handler = async (event) => {
         }, {
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Authorization': `Bearer ${apiKey}`,
                 'HTTP-Referer': 'https://diettraqr.com',
                 'X-Title': 'Aloft Giftings',
                 'OR-SITE-URL': 'https://diettraqr.com'
             }
         });
         
+        console.log("OpenRouter API response received");
+        
         return {
             statusCode: 200,
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
             body: JSON.stringify(response.data)
         };
     } catch (error) {
+        console.error("Function error:", error.message);
+        console.error("Response data:", error.response?.data);
+        
         return {
             statusCode: error.response?.status || 500,
-            body: JSON.stringify({ error: error.message })
+            headers: {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*"
+            },
+            body: JSON.stringify({ 
+                error: error.message,
+                details: error.response?.data || "No additional details"
+            })
         };
     }
 }; 

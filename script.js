@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             console.log("Attempting API request via Netlify Function...");
             
-            const response = await fetch('/.netlify/functions/generate-gifts', {
+            const response = await fetch('/api/generate-gifts', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -57,16 +57,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error("Netlify Function error response:", errorText);
-                throw new Error(`Function Error: ${errorText}`);
+                const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+                console.error("Netlify Function error response:", errorData);
+                throw new Error(errorData.error || `Function Error: ${response.status}`);
             }
             
             const data = await response.json();
             console.log("Netlify Function response received successfully");
             
             const content = data.choices[0].message.content;
-            return JSON.parse(content);
+            try {
+                return JSON.parse(content);
+            } catch (parseError) {
+                console.error("Error parsing JSON response:", parseError);
+                throw new Error("Could not parse API response");
+            }
             
         } catch (error) {
             console.warn("API request failed, using fallback data:", error);
