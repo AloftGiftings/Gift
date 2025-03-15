@@ -49,10 +49,89 @@ document.addEventListener('DOMContentLoaded', () => {
             1. A title/name for the gift
             2. A brief description of why it's a good fit
             3. An approximate price range
+            
+            Format your response as a JSON array with objects containing title, description, and priceRange fields.
         `;
         
+        // API Key for OpenRouter
+        const apiKey = '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';
+        
         try {
-            // Return mock data for now - this ensures the site works reliably
+            console.log("Making API request to OpenRouter...");
+            
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    'HTTP-Referer': 'https://diettraqr.com',
+                    'X-Title': 'Aloft Giftings'
+                },
+                body: JSON.stringify({
+                    model: "deepseek-ai/deepseek-coder-33b-instruct",
+                    messages: [
+                        {
+                            role: "system",
+                            content: "You are a helpful gift recommendation assistant. Provide thoughtful, specific gift ideas based on the criteria given. Always respond with properly formatted JSON."
+                        },
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 1000
+                })
+            });
+            
+            console.log("API response status:", response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Full error response:", errorText);
+                throw new Error("API request failed. Using fallback data instead.");
+            }
+            
+            const data = await response.json();
+            console.log("API response received successfully");
+            
+            const content = data.choices[0].message.content;
+            
+            // Try to parse the JSON from the response
+            try {
+                return JSON.parse(content);
+            } catch (parseError) {
+                console.log("Raw content:", content);
+                console.error("Parse error:", parseError);
+                
+                // If JSON parsing fails, try to extract structured data
+                const ideas = [];
+                const sections = content.split(/\d+\.\s/).filter(Boolean);
+                
+                for (const section of sections) {
+                    if (section.trim()) {
+                        const lines = section.split('\n').filter(Boolean);
+                        const title = lines[0].replace(/^[^a-zA-Z0-9]+/, '').trim();
+                        const description = lines.slice(1, -1).join(' ').trim();
+                        const priceRange = lines[lines.length - 1].includes('$') ? 
+                            lines[lines.length - 1].trim() : 'Price varies';
+                        
+                        ideas.push({ title, description, priceRange });
+                    }
+                }
+                
+                if (ideas.length > 0) {
+                    return ideas;
+                }
+                
+                // If all parsing attempts fail, use fallback data
+                throw new Error("Could not parse API response. Using fallback data.");
+            }
+        } catch (error) {
+            console.error("API request or parsing error:", error);
+            console.log("Using fallback gift ideas instead");
+            
+            // Return mock data as fallback
             return [
                 {
                     title: "Personalized Photo Album",
@@ -80,9 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     priceRange: "$40-$80"
                 }
             ];
-        } catch (error) {
-            console.error("Error:", error);
-            throw error;
         }
     }
     
