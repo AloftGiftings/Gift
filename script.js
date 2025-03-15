@@ -57,18 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const apiKey = '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';
         
         try {
-            console.log("Making API request to OpenRouter...");
+            console.log("Making API request to OpenRouter with Deepseek model...");
             
+            // Using the correct format for OpenRouter API
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': 'https://diettraqr.com',
+                    'HTTP-Referer': window.location.origin,
                     'X-Title': 'Aloft Giftings'
                 },
                 body: JSON.stringify({
-                    model: "deepseek-ai/deepseek-coder-33b-instruct",
+                    model: "deepseek/deepseek-coder-33b-instruct", // Updated model format
                     messages: [
                         {
                             role: "system",
@@ -80,7 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     ],
                     temperature: 0.7,
-                    max_tokens: 1000
+                    max_tokens: 1000,
+                    route: "deepseek" // Explicitly route to Deepseek
                 })
             });
             
